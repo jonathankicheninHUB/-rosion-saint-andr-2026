@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>St-André Intelligence System | 2008-2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+        
+        :root {
+            --bg-deep: #020617;
+            --glass: rgba(15, 23, 42, 0.8);
+            --accent: #3b82f6;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-deep); 
+            color: #f8fafc;
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);
+            background-attachment: fixed;
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { 
+            background: var(--glass); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+        
+        .map-zone { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; stroke: #0f172a; stroke-width: 1.5; }
+        .map-zone:hover { opacity: 0.9; stroke: white; stroke-width: 2.5; filter: brightness(1.2); }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: #1e293b;
+            height: 6px;
+            border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .tab-active { border-bottom: 2px solid var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body class="p-2 md:p-6 antialiased">
+
+    <div class="max-w-[1400px] mx-auto space-y-6">
+        
+        <!-- TOP NAV / GLOBAL MONITOR -->
+        <header class="flex flex-col lg:flex-row justify-between items-center gap-6 glass-panel p-6 rounded-3xl border-b-4 border-blue-600">
+            <div class="flex items-center gap-5">
+                <div class="p-4 bg-blue-600 rounded-2xl shadow-2xl shadow-blue-900/40">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight">ST-ANDRE <span class="text-blue-500">GENESIS</span></h1>
+                    <p class="text-xs font-mono text-slate-500 uppercase tracking-widest">Historical Tracker & 2026 Engine</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center md:text-left">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Inscrits 2026 (Est.)</p>
+                    <p class="text-xl font-bold">41 500</p>
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Cible Majorité</p>
+                    <p class="text-xl font-bold text-blue-400">12 000</p>
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Projection 2026</p>
+                    <p id="globalProj" class="text-xl font-bold text-white">--</p>
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Status</p>
+                    <p id="globalStatus" class="text-xs font-bold px-2 py-1 rounded bg-slate-800 inline-block">--</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- SIDEBAR: HISTORICAL REPOSITORY & CONTROLS -->
+            <div class="lg:col-span-3 space-y-6">
+                
+                <!-- HISTORICAL CARDS -->
+                <div class="glass-panel p-5 rounded-3xl">
+                    <h2 class="text-sm font-bold uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span> Historique Réel
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-slate-900/40 rounded-2xl border border-slate-800">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold">2008</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-red-500/20 text-red-400 rounded">Défaite</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-lg font-extrabold text-white">9 414 <span class="text-[10px] text-slate-500">voix</span></span>
+                                <span class="text-[10px] text-slate-500">vs Gauche Unie</span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-slate-900/40 rounded-2xl border border-slate-800">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold">2014</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded">Victoire</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-lg font-extrabold text-white">12 980 <span class="text-[10px] text-slate-500">voix</span></span>
+                                <span class="text-[10px] text-slate-500">vs Gauche Frag.</span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-slate-900/40 rounded-2xl border border-slate-800">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold">2020</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-red-500/20 text-red-400 rounded">Défaite</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-lg font-extrabold text-white">9 824 <span class="text-[10px] text-slate-500">voix</span></span>
+                                <span class="text-[10px] text-slate-500">vs Joé Bédier</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2026 SIMULATOR CONTROLS -->
+                <div class="glass-panel p-5 rounded-3xl border-blue-500/20">
+                    <h2 class="text-sm font-bold uppercase text-blue-400 mb-6 tracking-widest">Simulateur 2026</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Political Toggles -->
+                        <div class="space-y-3">
+                            <label class="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl cursor-pointer hover:bg-slate-800 border border-slate-800">
+                                <span class="text-xs">Scission Laurent V. (RN)</span>
+                                <input type="checkbox" id="scissionRN" checked class="w-4 h-4 rounded">
+                            </label>
+                            <label class="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl cursor-pointer hover:bg-slate-800 border border-slate-800">
+                                <span class="text-xs">Alliance Ramassamy</span>
+                                <input type="checkbox" id="allianceRam" checked class="w-4 h-4 rounded">
+                            </label>
+                        </div>
+
+                        <!-- Sliders -->
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-[10px] text-slate-500 uppercase font-bold">Crise de l'Eau</span>
+                                    <span id="waterVal" class="text-[10px] font-bold text-red-500">30%</span>
+                                </div>
+                                <input type="range" id="waterCrisisLevel" min="0" max="100" value="30" class="w-full">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-[10px] text-slate-500 uppercase font-bold">Recrutement 18-25 ans</span>
+                                    <span id="youthVal" class="text-[10px] font-bold text-emerald-500">20%</span>
+                                </div>
+                                <input type="range" id="youthRate" min="0" max="100" value="20" class="w-full">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN CANVAS: MAP & CHARTS (6 cols) -->
+            <div class="lg:col-span-6 space-y-6">
+                
+                <!-- DASHBOARD TABS -->
+                <div class="glass-panel p-2 rounded-2xl flex justify-center gap-4">
+                    <button id="tabMap" class="px-6 py-2 text-xs font-bold tab-active">CARTE INTERACTIVE</button>
+                    <button id="tabTrends" class="px-6 py-2 text-xs font-bold text-slate-400">COURBES D'ÉVOLUTION</button>
+                </div>
+
+                <!-- VIEW 1: MAP -->
+                <div id="viewMap" class="glass-panel p-6 rounded-3xl relative min-h-[500px] flex flex-col items-center">
+                    <div class="flex justify-between w-full mb-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase">Projection par Quartier</h3>
+                        <div class="flex gap-4">
+                            <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></div><span class="text-[9px]">Stable</span></div>
+                            <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-amber-500 rounded-sm"></div><span class="text-[9px]">Alerte</span></div>
+                            <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-red-600 rounded-sm"></div><span class="text-[9px]">Critique</span></div>
+                        </div>
+                    </div>
+                    <svg viewBox="0 0 400 400" class="w-full max-w-[420px] drop-shadow-2xl">
+                        <path d="M50,150 L150,150 L120,50 L30,80 Z" id="zone-1" class="map-zone" fill="#1e293b" />
+                        <path d="M150,150 L300,100 L350,180 L200,220 Z" id="zone-2" class="map-zone" fill="#1e293b" />
+                        <path d="M150,150 L200,220 L150,280 L100,220 Z" id="zone-3" class="map-zone" fill="#1e293b" />
+                        <path d="M100,220 L150,280 L100,350 L30,280 Z" id="zone-4" class="map-zone" fill="#1e293b" />
+                        <path d="M150,280 L250,300 L280,380 L150,380 Z" id="zone-5" class="map-zone" fill="#1e293b" />
+                        <path d="M200,220 L350,180 L380,280 L250,300 Z" id="zone-6" class="map-zone" fill="#1e293b" />
+                        
+                        <text x="60" y="110" font-size="8" fill="white" font-weight="bold" pointer-events="none">Cambuston</text>
+                        <text x="210" y="150" font-size="8" fill="white" font-weight="bold" pointer-events="none">Champ Borne</text>
+                        <text x="135" y="215" font-size="8" fill="white" font-weight="bold" pointer-events="none">Centre</text>
+                        <text x="60" y="300" font-size="8" fill="white" font-weight="bold" pointer-events="none">Petit Bazar</text>
+                        <text x="180" y="340" font-size="8" fill="white" font-weight="bold" pointer-events="none">Bras Chevrettes</text>
+                        <text x="260" y="260" font-size="8" fill="white" font-weight="bold" pointer-events="none">Mille Roches</text>
+                    </svg>
+                    <div class="absolute bottom-6 right-6 p-4 glass-panel rounded-2xl border border-blue-500/20 max-w-[200px]">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Quartier Actif</p>
+                        <p id="activeNName" class="text-sm font-bold text-blue-400">Saint-André</p>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: TRENDS (Hidden by default) -->
+                <div id="viewTrends" class="glass-panel p-6 rounded-3xl hidden">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-4">Analyse de Flux 2008-2026</h3>
+                    <div class="h-[400px]">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: ANALYTICS & STRATEGY (3 cols) -->
+            <div class="lg:col-span-3 space-y-6">
+                
+                <!-- NEIGHBORHOOD DETAIL CARD -->
+                <div id="detailCard" class="glass-panel p-6 rounded-3xl border-l-4 border-slate-700">
+                    <h3 id="nTitle" class="text-sm font-bold uppercase mb-4 text-white">Focus Quartier</h3>
+                    <div id="nStats" class="space-y-4">
+                        <div class="text-center py-10">
+                            <p class="text-xs text-slate-500">Cliquez sur un quartier pour une analyse granulaire.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI: THE BALANCE SHEET -->
+                <div class="glass-panel p-6 rounded-3xl">
+                    <h3 class="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest">Bilan Net (Delta)</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-red-400">Pertes (Mortalité/Crise)</span>
+                            <span id="deltaLoss" class="font-bold">-0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-emerald-400">Gains (Jeunes/Alliances)</span>
+                            <span id="deltaGain" class="font-bold">+0</span>
+                        </div>
+                        <hr class="border-slate-800">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs uppercase font-bold">Solde Net</span>
+                            <span id="deltaNet" class="text-lg font-extrabold font-mono">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTION FEED -->
+                <div class="glass-panel p-6 rounded-3xl">
+                    <h3 class="text-xs font-bold uppercase text-blue-400 mb-4 tracking-widest">Priorités Terrain</h3>
+                    <div id="strategyFeed" class="space-y-3">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER: GLOBAL EFFORT BAR -->
+        <footer class="glass-panel p-6 rounded-3xl">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex-1 w-full">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-[10px] font-bold uppercase text-slate-500">Taux d'Effort pour la Victoire (12 000 voix)</span>
+                        <span id="effortPerc" class="text-sm font-extrabold text-amber-500">--%</span>
+                    </div>
+                    <div class="h-3 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                        <div id="effortBar" class="h-full bg-amber-500 transition-all duration-700 shadow-[0_0_10px_#f59e0b]" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Gap de Voix Manquant</p>
+                    <p id="gapVoix" class="text-3xl font-extrabold text-white">--</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- DATA REPOSITORY ---
+        const history = [
+            { year: 2008, score: 9414, label: 'JPV' },
+            { year: 2014, score: 12980, label: 'JPV' },
+            { year: 2020, score: 9824, label: 'JMV' }
+        ];
+
+        const neighborhoods = [
+            { id: "zone-1", name: "Cambuston", base2020: 2100, target: 2600, weight: 0.22, waterVuln: 1.1, youthPool: 900 },
+            { id: "zone-2", name: "Champ Borne", base2020: 1850, target: 2400, weight: 0.19, waterVuln: 1.0, youthPool: 800 },
+            { id: "zone-3", name: "Centre-Ville", base2020: 2300, target: 2500, weight: 0.23, waterVuln: 0.8, youthPool: 600 },
+            { id: "zone-4", name: "Petit Bazar", base2020: 1250, target: 1600, weight: 0.13, waterVuln: 1.2, youthPool: 700 },
+            { id: "zone-5", name: "Bras des Chevrettes", base2020: 950, target: 1400, weight: 0.10, waterVuln: 2.0, youthPool: 500 },
+            { id: "zone-6", name: "Mille Roches", base2020: 1374, target: 1500, weight: 0.14, waterVuln: 1.3, youthPool: 700 }
+        ];
+
+        let mainChart;
+
+        // --- INITIALIZATION ---
+        function init() {
+            initChart();
+            setupTabs();
+            setupInteractions();
+            updateSimulation();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['2008', '2014', '2020', '2026'],
+                    datasets: [{
+                        label: 'Stock Virapoullé',
+                        data: [...history.map(h => h.score), null],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#3b82f6',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function setupTabs() {
+            const tabMap = document.getElementById('tabMap');
+            const tabTrends = document.getElementById('tabTrends');
+            const viewMap = document.getElementById('viewMap');
+            const viewTrends = document.getElementById('viewTrends');
+
+            tabMap.onclick = () => {
+                tabMap.classList.add('tab-active'); tabMap.classList.remove('text-slate-400');
+                tabTrends.classList.remove('tab-active'); tabTrends.classList.add('text-slate-400');
+                viewMap.classList.remove('hidden'); viewTrends.classList.add('hidden');
+            };
+
+            tabTrends.onclick = () => {
+                tabTrends.classList.add('tab-active'); tabTrends.classList.remove('text-slate-400');
+                tabMap.classList.remove('tab-active'); tabMap.classList.add('text-slate-400');
+                viewTrends.classList.remove('hidden'); viewMap.classList.add('hidden');
+            };
+        }
+
+        function setupInteractions() {
+            const inputs = ['scissionRN', 'allianceRam', 'waterCrisisLevel', 'youthRate'];
+            inputs.forEach(id => document.getElementById(id).addEventListener('input', updateSimulation));
+
+            neighborhoods.forEach(n => {
+                const el = document.getElementById(n.id);
+                if (el) {
+                    el.addEventListener('mouseenter', () => showDetails(n));
+                    el.addEventListener('click', () => showDetails(n));
+                }
+            });
+        }
+
+        // --- CORE SIMULATION ENGINE ---
+        function updateSimulation() {
+            const targetWin = 12000;
+            const erosionRate = 0.07; // Base 7% fixe (mortalité standard sur 6 ans)
+            
+            const isScission = document.getElementById('scissionRN').checked;
+            const isAlliance = document.getElementById('allianceRam').checked;
+            const waterCrisis = parseInt(document.getElementById('waterCrisisLevel').value) / 100;
+            const youthRate = parseInt(document.getElementById('youthRate').value) / 100;
+
+            document.getElementById('waterVal').innerText = (waterCrisis * 100).toFixed(0) + '%';
+            document.getElementById('youthVal').innerText = (youthRate * 100).toFixed(0) + '%';
+
+            let totalProj = 0;
+            let totalLoss = 0;
+            let totalGain = 0;
+
+            neighborhoods.forEach(n => {
+                // Calculation Logic
+                let current = n.base2020 * (1 - erosionRate);
+                let loss = n.base2020 * erosionRate;
+
+                if (isScission) {
+                    const scLoss = current * 0.18;
+                    current -= scLoss; loss += scLoss;
+                }
+
+                const wLoss = current * (0.15 * waterCrisis * n.waterVuln);
+                current -= wLoss; loss += wLoss;
+
+                let gain = 0;
+                if (isAlliance) gain += (900 * n.weight);
+                gain += (n.youthPool * youthRate);
+                current += gain;
+
+                // Storage
+                n.currentScore = Math.round(current);
+                n.currentLoss = Math.round(loss);
+                n.currentGain = Math.round(gain);
+                n.deficit = (((n.target - current) / n.target) * 100).toFixed(1);
+
+                totalProj += current;
+                totalLoss += loss;
+                totalGain += gain;
+
+                // Visual Update Map
+                const d = parseFloat(n.deficit);
+                const el = document.getElementById(n.id);
+                if (d > 40) el.setAttribute('fill', '#dc2626');
+                else if (d > 20) el.setAttribute('fill', '#f59e0b');
+                else el.setAttribute('fill', '#10b981');
+            });
+
+            totalProj = Math.round(totalProj);
+            totalLoss = Math.round(totalLoss);
+            totalGain = Math.round(totalGain);
+
+            // Update UI Global
+            document.getElementById('globalProj').innerText = totalProj.toLocaleString();
+            document.getElementById('gapVoix').innerText = Math.max(0, targetWin - totalProj).toLocaleString();
+            
+            const status = document.getElementById('globalStatus');
+            if (totalProj >= targetWin) {
+                status.innerText = "VICTOIRE"; status.className = "text-xs font-bold px-2 py-1 rounded bg-emerald-500/20 text-emerald-400";
+            } else {
+                status.innerText = "DÉFAITE"; status.className = "text-xs font-bold px-2 py-1 rounded bg-red-500/20 text-red-400";
+            }
+
+            const effort = Math.round((Math.max(0, targetWin - totalProj) / totalProj) * 100);
+            document.getElementById('effortPerc').innerText = effort + '%';
+            document.getElementById('effortBar').style.width = Math.min(100, effort) + '%';
+            document.getElementById('effortBar').className = `h-full transition-all duration-700 ${effort > 40 ? 'bg-red-500 shadow-[0_0_15px_#ef4444]' : 'bg-amber-500 shadow-[0_0_15px_#f59e0b]'}`;
+
+            // Update Balance Sheet
+            document.getElementById('deltaLoss').innerText = "-" + totalLoss.toLocaleString();
+            document.getElementById('deltaGain').innerText = "+" + totalGain.toLocaleString();
+            const net = totalGain - totalLoss;
+            document.getElementById('deltaNet').innerText = (net > 0 ? "+" : "") + net.toLocaleString();
+            document.getElementById('deltaNet').className = `text-lg font-extrabold font-mono ${net > 0 ? 'text-emerald-400' : 'text-red-400'}`;
+
+            // Chart Sync
+            mainChart.data.datasets[0].data[3] = totalProj;
+            mainChart.update();
+
+            // Feed Sync
+            updateFeed(isScission, waterCrisis, youthRate);
+        }
+
+        function showDetails(n) {
+            document.getElementById('activeNName').innerText = n.name;
+            const card = document.getElementById('detailCard');
+            const d = parseFloat(n.deficit);
+            card.style.borderLeftColor = d > 40 ? '#dc2626' : (d > 20 ? '#f59e0b' : '#10b981');
+
+            document.getElementById('nTitle').innerText = n.name;
+            document.getElementById('nStats').innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500">Projection 2026</span>
+                        <span class="font-bold text-white text-lg">${n.currentScore}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-500">Mortalité / Crise</span>
+                        <span class="font-bold text-red-400">-${n.currentLoss}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-500">Recrutement / Alliances</span>
+                        <span class="font-bold text-emerald-400">+${n.currentGain}</span>
+                    </div>
+                    <div class="p-3 bg-slate-900/60 rounded-xl">
+                        <div class="flex justify-between text-[9px] mb-1 font-bold">
+                            <span class="text-slate-500 uppercase">Déficit de zone</span>
+                            <span class="${d > 20 ? 'text-red-400' : 'text-emerald-400'}">${d}%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full ${d > 40 ? 'bg-red-600' : 'bg-amber-500'}" style="width: ${Math.min(100, d)}%"></div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-tight border-t border-slate-800 pt-3 italic">
+                        ${n.waterVuln > 1.5 ? "Attention : Quartier hautement sensible aux coupures d'eau." : "Zone de stabilité relative."}
+                    </p>
+                </div>
+            `;
+        }
+
+        function updateFeed(scission, water, youth) {
+            const feed = document.getElementById('strategyFeed');
+            let html = "";
+
+            if (scission) {
+                html += `<div class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl"><p class="text-[10px] font-bold text-red-400 uppercase">Alerte Scission</p><p class="text-[9px] text-slate-500">La division du nom Virapoullé est le frein #1.</p></div>`;
+            }
+            if (water > 0.5) {
+                html += `<div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl"><p class="text-[10px] font-bold text-amber-500 uppercase">Sanction Eau</p><p class="text-[9px] text-slate-500">Bascule de l'électorat indécis vers l'abstention.</p></div>`;
+            }
+            if (youth > 0.6) {
+                html += `<div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"><p class="text-[10px] font-bold text-emerald-400 uppercase">Growth Success</p><p class="text-[9px] text-slate-500">La cohorte 18-25 ans compense la dette démographique.</p></div>`;
+            }
+
+            feed.innerHTML = html || `<p class="text-[10px] text-slate-600 italic">Aucune alerte majeure détectée.</p>`;
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
